@@ -1,0 +1,6 @@
+streamlit
+streamlit-local-storage
+finnhub-python
+pandas
+yfinance
+earnings
