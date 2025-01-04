@@ -139,7 +139,7 @@ def main(date_range):
 
     # Calculate next Friday for each date in the 'date' column
     unique_ticker_df.loc[:, 'next_friday'] = pd.to_datetime(unique_ticker_df['date']).apply(
-        lambda x: x + pd.DateOffset(days=(4 - x.weekday()) % 7)
+        lambda x: (x + pd.DateOffset(days=(4 - x.weekday()) % 7)).date()
     )
 
     # Remove rows where put_bid or put_ask are NaN
