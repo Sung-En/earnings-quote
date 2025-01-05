@@ -103,7 +103,10 @@ def format_put_value(value):
 def main(date_range):
     # Fetch data from both sources
     calendar_df = fetch_calendar_earnings(calendar, date_range)
-    finnhub_df = fetch_finnhub_earnings(finnhub_client, "2024-12-31", "2025-01-10")
+    # Convert date range to strings for start and end
+    start_date = date_range.min().strftime('%Y-%m-%d')
+    end_date = date_range.max().strftime('%Y-%m-%d')
+    finnhub_df = fetch_finnhub_earnings(finnhub_client, start_date, end_date)
 
     # Clean and prepare the Calendar DataFrame
     calendar_df = calendar_df[['date', 'ticker']] if 'ticker' in calendar_df.columns else calendar_df
