@@ -4,11 +4,14 @@ from main import main  # Assuming main.py contains the main function
 
 # Streamlit UI: Date input selection
 today = pd.to_datetime("today")
-next_friday = today + pd.DateOffset(days=(4 - today.weekday()) + 7)
+
+# Calculate the 2nd upcoming Friday from today
+days_until_first_friday = (4 - today.weekday()) + (7 if (4 - today.weekday()) < 0 else 0)
+second_next_friday = today + pd.DateOffset(days=days_until_first_friday + 7)
 
 # Default date range
 default_start_date = today
-default_end_date = next_friday
+default_end_date = second_next_friday
 
 # Create Streamlit input widgets for date range
 start_date = st.date_input('Start Date', default_start_date)
@@ -27,4 +30,3 @@ result_df = main(date_range)
 # Display the results in Streamlit
 st.title("Earnings Calendar with Options Data")
 st.dataframe(result_df)
-

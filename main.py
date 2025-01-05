@@ -156,7 +156,7 @@ def main(date_range):
 # Main testing area
 if __name__ == "__main__":
     # Set date range for testing
-    date_range = pd.date_range(start="2024-12-31", end="2025-01-10")
+    date_range = pd.date_range(start="2025-01-01", end="2025-01-10")
 
     # Call main function to process data
     result_df = main(date_range)
