@@ -27,6 +27,17 @@ date_range = pd.date_range(start=start_date, end=end_date)
 # Fetch and process the data
 result_df = main(date_range)
 
+# Separate the dataframe based on put_bid value
+high_put_bid = result_df[result_df['put_bid'].apply(lambda x: float(x.strip('%')) >= 3)]
+low_put_bid = result_df[result_df['put_bid'].apply(lambda x: float(x.strip('%')) < 3)]
+
 # Display the results in Streamlit
 st.title("Earnings Calendar with Options Data")
-st.dataframe(result_df)
+
+# Show dataframe with put_bid >= 3%
+st.subheader("Put Bid >= 3%")
+st.dataframe(high_put_bid)
+
+# Show dataframe with put_bid < 3%
+st.subheader("Put Bid < 3%")
+st.dataframe(low_put_bid)
