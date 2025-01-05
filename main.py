@@ -17,7 +17,7 @@ logging.getLogger('yfinance').addHandler(NullHandler())
 
 # Initialize the Calendar instance and Finnhub client
 calendar = Calendar()
-finnhub_client = finnhub.Client(api_key='ctq9vopr01qmn6h3qql0ctq9vopr01qmn6h3qqlg')
+finnhub_client = finnhub.Client(api_key='ctssq59r01qin3c0pde0ctssq59r01qin3c0pdeg')
 
 # Function to fetch earnings data from Calendar API
 def fetch_calendar_earnings(calendar, date_range):
@@ -103,10 +103,7 @@ def format_put_value(value):
 def main(date_range):
     # Fetch data from both sources
     calendar_df = fetch_calendar_earnings(calendar, date_range)
-    # Convert date range to strings for start and end
-    start_date = date_range.min().strftime('%Y-%m-%d')
-    end_date = date_range.max().strftime('%Y-%m-%d')
-    finnhub_df = fetch_finnhub_earnings(finnhub_client, start_date, end_date)
+    finnhub_df = fetch_finnhub_earnings(finnhub_client, "2024-12-31", "2025-01-10")
 
     # Clean and prepare the Calendar DataFrame
     calendar_df = calendar_df[['date', 'ticker']] if 'ticker' in calendar_df.columns else calendar_df
@@ -137,10 +134,11 @@ def main(date_range):
     unique_ticker_df.loc[:, 'put_bid'] = unique_ticker_df['put_bid'].apply(format_put_value)
     unique_ticker_df.loc[:, 'put_ask'] = unique_ticker_df['put_ask'].apply(format_put_value)
 
-    # Calculate next Friday for each date in the 'date' column and format as string (date only)
+    # Calculate next Friday for each date in the 'date' column
     unique_ticker_df.loc[:, 'next_friday'] = pd.to_datetime(unique_ticker_df['date']).apply(
-        lambda x: (x + pd.DateOffset(days=(4 - x.weekday()) % 7)).strftime('%Y-%m-%d')
+        lambda x: x + pd.DateOffset(days=(4 - x.weekday()) % 7)
     )
+
     # Remove rows where put_bid or put_ask are NaN
     unique_ticker_df = unique_ticker_df.dropna(subset=['put_bid', 'put_ask'])
 
