@@ -27,19 +27,6 @@ date_range = pd.date_range(start=start_date, end=end_date)
 # Fetch and process the data
 result_df = main(date_range)
 
-# Function to convert market cap to numerical value in billions
-def convert_market_cap(value):
-    if "B" in value:
-        return float(value.replace("B", ""))  # Convert to billions
-    elif "M" in value:
-        return float(value.replace("M", "")) / 1000  # Convert to billions
-    return 0  # If the value doesn't contain 'B' or 'M', treat it as 0
-
-# Apply conversion to get numerical values for sorting
-result_df['Market Cap Numeric'] = result_df['Market Cap'].apply(convert_market_cap)
-
 # Display the results in Streamlit
 st.title("Earnings Calendar with Options Data")
-
-# Show the dataframe with the user-friendly 'Market Cap' and hidden 'Market Cap Numeric' for sorting
-st.dataframe(result_df.drop(columns=["Market Cap Numeric"]))  # Hide the numeric column
+st.dataframe(result_df)
