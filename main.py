@@ -84,7 +84,7 @@ def fetch_additional_data(row):
 def format_market_cap(value):
     if value is None or pd.isna(value):  # Check if the value is None or NaN
         return None
-    return f"{value / 1e9:.2f}B"
+    return round(value / 1e9, 2)
 
 # Function to format put bid and put ask as percentages
 def format_put_value(value):
