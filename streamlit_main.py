@@ -39,5 +39,5 @@ st.subheader("Put Bid >= 3%")
 st.dataframe(high_put_bid)
 
 # Show dataframe with put_bid < 3%
-st.subheader("Put Bid < 3%")
+st.subheader("1% <= Put Bid < 3%")
 st.dataframe(low_put_bid)
