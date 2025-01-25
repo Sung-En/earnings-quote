@@ -110,23 +110,25 @@ import pandas as pd
 import streamlit as st
 
 
-def batch_apply_with_timing(df, func, batch_size=50, delay=5):
+def batch_apply_with_progress(df, func, batch_size=50, delay=5):
     """
-    Apply a function to a DataFrame in batches with delays and log the time for each batch in Streamlit.
+    Apply a function to a DataFrame in batches with a visual progress bar in Streamlit.
     """
     all_results = []
-    progress_placeholder = st.empty()  # Placeholder for progress messages
     total_batches = (len(df) + batch_size - 1) // batch_size
+
+    # Streamlit progress bar
+    progress_bar = st.progress(0)
+    progress_text = st.empty()  # Placeholder for progress messages
 
     for i in range(0, len(df), batch_size):
         batch_start_time = time.time()  # Start timing the batch
         batch = df.iloc[i:i + batch_size]
 
-        # Display progress in Streamlit
+        # Update progress bar and message
         batch_number = i // batch_size + 1
-        progress_placeholder.text(
-            f"Processing batch {batch_number}/{total_batches}..."
-        )
+        progress_bar.progress(int((batch_number / total_batches) * 100))
+        progress_text.text(f"Processing batch {batch_number}/{total_batches}...")
 
         # Apply the function to the current batch
         results = batch.apply(func, axis=1)
@@ -135,18 +137,17 @@ def batch_apply_with_timing(df, func, batch_size=50, delay=5):
         # Measure and show batch time
         batch_end_time = time.time()
         batch_time = batch_end_time - batch_start_time
-        progress_placeholder.text(
-            f"Batch {batch_number}/{total_batches} completed in {batch_time:.2f} seconds."
-        )
+        progress_text.text(f"Batch {batch_number}/{total_batches} completed in {batch_time:.2f} seconds.")
 
         # Delay before processing the next batch
         if i + batch_size < len(df):  # Avoid delay after the last batch
-            progress_placeholder.text(
+            progress_text.text(
                 f"Waiting {delay} seconds before starting batch {batch_number + 1}/{total_batches}..."
             )
             time.sleep(delay)
 
-    progress_placeholder.text("Processing complete!")
+    progress_bar.progress(100)  # Ensure the progress bar reaches 100%
+    progress_text.text("Processing complete!")
     return pd.concat(all_results)
 
 
