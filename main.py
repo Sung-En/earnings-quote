@@ -117,34 +117,32 @@ def batch_apply_with_progress(df, func, batch_size=50, delay=5):
     all_results = []
     total_batches = (len(df) + batch_size - 1) // batch_size
 
-    # Streamlit text container for progress messages
-    for i in range(0, len(df), batch_size):
-        batch_start_time = time.time()  # Start timing the batch
-        batch = df.iloc[i:i + batch_size]
+    # Create a dynamic progress container in Streamlit
+    with st.empty():  # Using `with` to update the placeholder content dynamically
+        for i in range(0, len(df), batch_size):
+            batch_start_time = time.time()  # Start timing the batch
+            batch = df.iloc[i:i + batch_size]
 
-        # Update progress message
-        batch_number = i // batch_size + 1
-        st.write(f"Processing batch {batch_number}/{total_batches}...")  # Streamlit update
-        print(f"Processing batch {batch_number}/{total_batches}...")  # Debugging print
+            # Update progress message in the placeholder
+            batch_number = i // batch_size + 1
+            st.write(f"⏳ Processing batch {batch_number}/{total_batches}...")
 
-        # Apply the function to the current batch
-        results = batch.apply(func, axis=1)
-        all_results.append(results)
+            # Apply the function to the current batch
+            results = batch.apply(func, axis=1)
+            all_results.append(results)
 
-        # Measure and show batch time
-        batch_end_time = time.time()
-        batch_time = batch_end_time - batch_start_time
-        st.write(f"Batch {batch_number}/{total_batches} completed in {batch_time:.2f} seconds.")  # Streamlit update
-        print(f"Batch {batch_number}/{total_batches} completed in {batch_time:.2f} seconds.")  # Debugging print
+            # Measure and show batch time
+            batch_end_time = time.time()
+            batch_time = batch_end_time - batch_start_time
+            st.write(f"✔️ Batch {batch_number}/{total_batches} completed in {batch_time:.2f} seconds.")
 
-        # Delay before processing the next batch
-        if i + batch_size < len(df):  # Avoid delay after the last batch
-            st.write(f"Waiting {delay} seconds before starting batch {batch_number + 1}/{total_batches}...")  # Streamlit update
-            print(f"Waiting {delay} seconds before starting batch {batch_number + 1}/{total_batches}...")  # Debugging print
-            time.sleep(delay)
+            # Delay before processing the next batch
+            if i + batch_size < len(df):  # Avoid delay after the last batch
+                st.write(f"⏳ Waiting {delay} seconds before starting batch {batch_number + 1}/{total_batches}...")
+                time.sleep(delay)
 
-    st.write("Processing complete!")  # Streamlit update
-    print("Processing complete!")  # Debugging print
+        st.write("✅ Processing complete!")
+
     return pd.concat(all_results)
 
 
