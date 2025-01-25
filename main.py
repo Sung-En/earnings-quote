@@ -4,20 +4,25 @@ import yfinance as yf
 import warnings
 import logging
 from earnings import Calendar
+import time
+import streamlit as st
 
 # Suppress the warning messages from yfinance (404 errors)
 warnings.filterwarnings("ignore", category=UserWarning, module='yfinance')
+
 
 # Suppress HTTP error messages from yfinance requests
 class NullHandler(logging.Handler):
     def emit(self, record):
         pass
 
+
 logging.getLogger('yfinance').addHandler(NullHandler())
 
 # Initialize the Calendar instance and Finnhub client
 calendar = Calendar()
 finnhub_client = finnhub.Client(api_key='ctssq59r01qin3c0pde0ctssq59r01qin3c0pdeg')
+
 
 # Function to fetch earnings data from Calendar API
 def fetch_calendar_earnings(calendar, date_range):
@@ -34,17 +39,19 @@ def fetch_calendar_earnings(calendar, date_range):
                 continue
     return pd.DataFrame(earnings_data)
 
+
 # Function to fetch earnings calendar data from Finnhub
 def fetch_finnhub_earnings(client, start_date, end_date):
     data = client.earnings_calendar(_from=start_date, to=end_date, symbol="", international=False)
     return pd.DataFrame(data['earningsCalendar'])
+
 
 # Function to fetch additional data from yfinance
 def fetch_additional_data(row):
     try:
         ticker = yf.Ticker(row['ticker'])
         info = ticker.info
-
+        print(ticker)
         # Market cap, full name, and sector
         market_cap = info.get('marketCap', None)
         full_name = info.get('longName', None)
@@ -80,11 +87,13 @@ def fetch_additional_data(row):
         return pd.Series([None, None, None, None, None, None],
                          index=['put_bid', 'put_ask', 'market_cap', 'full_name', 'sector', 'next_friday'])
 
+
 # Format Market Cap as readable string
 def format_market_cap(value):
     if value is None or pd.isna(value):  # Check if the value is None or NaN
         return None
     return round(value / 1e9, 2)
+
 
 # Function to format put bid and put ask as percentages
 def format_put_value(value):
@@ -92,6 +101,36 @@ def format_put_value(value):
     if value is None or pd.isna(value):
         return None
     return f"{value:.2f}%" if value is not None else None
+
+
+# Batch processing with delays
+# Batch processing with delays and timing
+def batch_apply_with_timing(df, func, batch_size=50, delay=5):
+    """
+    Apply a function to a DataFrame in batches with delays and log the time for each batch.
+    """
+    all_results = []
+    for i in range(0, len(df), batch_size):
+        batch_start_time = time.time()  # Start timing the batch
+        batch = df.iloc[i:i + batch_size]
+        print(f"Processing batch {i // batch_size + 1}/{(len(df) + batch_size - 1) // batch_size}...")
+
+        # Apply the function to the current batch
+        results = batch.apply(func, axis=1)
+        all_results.append(results)
+
+        # Measure and print batch time
+        batch_end_time = time.time()
+        batch_time = batch_end_time - batch_start_time
+        print(f"Batch {i // batch_size + 1} completed in {batch_time:.2f} seconds.")
+
+        # Delay before processing the next batch
+        if i + batch_size < len(df):  # Avoid unnecessary delay after the last batch
+            print(f"Waiting {delay} seconds before the next batch...")
+            time.sleep(delay)
+
+    return pd.concat(all_results)
+
 
 # Main function to fetch and process data
 def main(date_range):
@@ -119,10 +158,13 @@ def main(date_range):
     unique_ticker_df = merged_df.drop_duplicates(subset=['ticker'], keep='first')
 
     # Apply the additional data fetching function
-    additional_data = unique_ticker_df.apply(fetch_additional_data, axis=1)
+    #print(len(unique_ticker_df))
+    additional_data = batch_apply_with_timing(unique_ticker_df, fetch_additional_data, batch_size=50, delay=30)
+    #additional_data = unique_ticker_df.apply(fetch_additional_data, axis=1)
 
     # Assign the additional data to the DataFrame's columns
-    unique_ticker_df.loc[:, ['put_bid', 'put_ask', 'market_cap', 'full_name', 'sector', 'next_friday']] = additional_data
+    unique_ticker_df.loc[:,
+    ['put_bid', 'put_ask', 'market_cap', 'full_name', 'sector', 'next_friday']] = additional_data
 
     # Format Market Cap as readable string
     unique_ticker_df.loc[:, 'market_cap'] = unique_ticker_df['market_cap'].apply(format_market_cap)
@@ -140,17 +182,19 @@ def main(date_range):
     unique_ticker_df = unique_ticker_df.dropna(subset=['put_bid', 'put_ask'])
 
     # Reorder columns as required
-    unique_ticker_df = unique_ticker_df[['date', 'ticker', 'put_bid', 'put_ask', 'market_cap', 'full_name', 'sector', 'next_friday']]
+    unique_ticker_df = unique_ticker_df[
+        ['date', 'ticker', 'put_bid', 'put_ask', 'market_cap', 'full_name', 'sector', 'next_friday']]
 
     # Sort by 'date'
     unique_ticker_df = unique_ticker_df.sort_values(by='date')
 
     return unique_ticker_df
 
+
 # Main testing area
 if __name__ == "__main__":
     # Set date range for testing
-    date_range = pd.date_range(start="2025-01-18", end="2025-01-24")
+    date_range = pd.date_range(start="2025-01-25", end="2025-02-07")
 
     # Call main function to process data
     result_df = main(date_range)
