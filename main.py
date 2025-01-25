@@ -112,23 +112,20 @@ import streamlit as st
 
 def batch_apply_with_progress(df, func, batch_size=50, delay=5):
     """
-    Apply a function to a DataFrame in batches with a visual progress bar in Streamlit.
+    Apply a function to a DataFrame in batches with a progress log in Streamlit.
     """
     all_results = []
     total_batches = (len(df) + batch_size - 1) // batch_size
 
-    # Streamlit progress bar
-    progress_bar = st.progress(0)
-    progress_text = st.empty()  # Placeholder for progress messages
-
+    # Streamlit text container for progress messages
     for i in range(0, len(df), batch_size):
         batch_start_time = time.time()  # Start timing the batch
         batch = df.iloc[i:i + batch_size]
 
-        # Update progress bar and message
+        # Update progress message
         batch_number = i // batch_size + 1
-        progress_bar.progress(int((batch_number / total_batches) * 100))
-        progress_text.text(f"Processing batch {batch_number}/{total_batches}...")
+        st.write(f"Processing batch {batch_number}/{total_batches}...")  # Streamlit update
+        print(f"Processing batch {batch_number}/{total_batches}...")  # Debugging print
 
         # Apply the function to the current batch
         results = batch.apply(func, axis=1)
@@ -137,18 +134,20 @@ def batch_apply_with_progress(df, func, batch_size=50, delay=5):
         # Measure and show batch time
         batch_end_time = time.time()
         batch_time = batch_end_time - batch_start_time
-        progress_text.text(f"Batch {batch_number}/{total_batches} completed in {batch_time:.2f} seconds.")
+        st.write(f"Batch {batch_number}/{total_batches} completed in {batch_time:.2f} seconds.")  # Streamlit update
+        print(f"Batch {batch_number}/{total_batches} completed in {batch_time:.2f} seconds.")  # Debugging print
 
         # Delay before processing the next batch
         if i + batch_size < len(df):  # Avoid delay after the last batch
-            progress_text.text(
-                f"Waiting {delay} seconds before starting batch {batch_number + 1}/{total_batches}..."
-            )
+            st.write(f"Waiting {delay} seconds before starting batch {batch_number + 1}/{total_batches}...")  # Streamlit update
+            print(f"Waiting {delay} seconds before starting batch {batch_number + 1}/{total_batches}...")  # Debugging print
             time.sleep(delay)
 
-    progress_bar.progress(100)  # Ensure the progress bar reaches 100%
-    progress_text.text("Processing complete!")
+    st.write("Processing complete!")  # Streamlit update
+    print("Processing complete!")  # Debugging print
     return pd.concat(all_results)
+
+
 
 
 # Main function to fetch and process data
@@ -178,7 +177,7 @@ def main(date_range):
 
     # Apply the additional data fetching function
     #print(len(unique_ticker_df))
-    additional_data = batch_apply_with_timing(unique_ticker_df, fetch_additional_data, batch_size=50, delay=30)
+    additional_data = batch_apply_with_progress(unique_ticker_df, fetch_additional_data, batch_size=50, delay=30)
     #additional_data = unique_ticker_df.apply(fetch_additional_data, axis=1)
 
     # Assign the additional data to the DataFrame's columns
